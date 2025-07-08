@@ -2,6 +2,7 @@ import BarbershopItem from "../_components/barbershop-item"
 import { db } from "../_lib/prisma"
 import Header from "../_components/header"
 import { SearchIcon } from "lucide-react"
+import Search from "../_components/search"
 
 interface BarbershopsPageProps {
   searchParams: {
@@ -10,23 +11,74 @@ interface BarbershopsPageProps {
 }
 
 const BarbershopsPage = async ({ searchParams }: BarbershopsPageProps) => {
-  const barbershops = await db.barbershop.findMany({
-    where: {
-      name: {
-        contains: searchParams.search || "",
-        mode: "insensitive",
+  const search = searchParams.search || "";
+  let barbershops;
+
+  if (search.toLowerCase().startsWith("serviço:")) {
+    const serviceName = search.slice(8).trim();
+    barbershops = await db.barbershop.findMany({
+      where: {
+        services: {
+          some: {
+            name: {
+              contains: serviceName,
+              mode: "insensitive",
+            },
+          },
+        },
       },
-    },
-    include: {
-      services: true,
-    },
-  })
+      include: {
+        services: true,
+      },
+    });
+  } else {
+    barbershops = await db.barbershop.findMany({
+      where: {
+        OR: [
+          {
+            name: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+          {
+            address: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+          {
+            description: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+          {
+            services: {
+              some: {
+                name: {
+                  contains: search,
+                  mode: "insensitive",
+                },
+              },
+            },
+          },
+        ],
+      },
+      include: {
+        services: true,
+      },
+    });
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-background to-background/95">
       <Header />
 
       <div className="flex-1 px-5 lg:container sm:px-6 md:px-8 lg:mx-auto lg:max-w-6xl">
+        <div className="my-4">
+          <Search/> 
+        </div> 
         <div
           className="animate-fade-in mb-6 mt-6 flex items-center gap-2 opacity-0"
           style={{ animationDelay: "0.1s", animationDuration: "0.5s" }}

@@ -89,20 +89,25 @@ const SidebarButton = () => {
       </div>
       <div className="flex flex-col gap-2 border-b border-solid py-5">
         {quickSearchOptions.map((option) => (
-          <Button
-            key={option.title}
-            className="justify-start gap-2"
-            variant="ghost"
-          >
-            <Image
-              src={option.imageUrl}
-              key={option.imageUrl}
-              width={18}
-              height={18}
-              alt="cabelo"
-            ></Image>
-            {option.title}
-          </Button>
+          <SheetClose asChild>
+            <Button
+              key={option.title}
+              className="justify-start gap-2"
+              variant="ghost"
+              asChild
+            >
+              <Link href={`/barbershops?search=serviço:${option.title}`}>
+                <Image
+                  src={option.imageUrl}
+                  key={option.imageUrl}
+                  width={18}
+                  height={18}
+                  alt={option.title}
+                />
+                {option.title}    
+              </Link>           
+            </Button>
+          </SheetClose>
         ))}
       </div>
 

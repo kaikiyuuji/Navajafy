@@ -29,3 +29,5 @@ export const quickSearchOptions: QuickSearchOption[] = [
     title: "Hidratação",
   },
 ]
+
+export type { QuickSearchOption }
