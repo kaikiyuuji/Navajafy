@@ -18,7 +18,6 @@ const BarbershopItem = ({ barbershop }: BarbershopItemsProps) => {
         <div className="group relative h-[159px] w-full">
           <Image
             fill
-            className="object-cover transition-transform duration-700 group-hover:scale-110"
             src={barbershop.imageUrl}
             alt={barbershop.name}
           />

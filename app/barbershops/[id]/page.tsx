@@ -38,13 +38,21 @@ const BarbershopPage = async ({ params }: BarbershopDetailsProps) => {
     return notFound()
   }
 
+  const serializedBarbershop = {
+    ...barbershop,
+    services: barbershop.services.map((service) => ({
+      ...service,
+      price: service.price.toString(),
+    })),
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-background to-background/95">
       {/* Hero Image */}
       <div className="relative h-[250px] w-full sm:h-[350px] md:h-[400px]">
         <Image
-          src={barbershop.imageUrl}
-          alt={barbershop.name}
+          src={serializedBarbershop.imageUrl}
+          alt={serializedBarbershop.name}
           fill
           className="object-cover"
           priority
@@ -83,12 +91,14 @@ const BarbershopPage = async ({ params }: BarbershopDetailsProps) => {
         >
           {/* Barbershop Info */}
           <div className="space-y-2 border-b border-secondary/20 p-5 sm:p-6">
-            <h1 className="text-xl font-bold sm:text-2xl">{barbershop.name}</h1>
+            <h1 className="text-xl font-bold sm:text-2xl">
+              {serializedBarbershop.name}
+            </h1>
 
             <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
               <div className="flex items-center gap-1">
                 <MapPinIcon className="text-primary" size={18} />
-                <p className="text-sm">{barbershop?.address}</p>
+                <p className="text-sm">{serializedBarbershop?.address}</p>
               </div>
 
               <div className="flex items-center gap-1">
@@ -108,7 +118,7 @@ const BarbershopPage = async ({ params }: BarbershopDetailsProps) => {
               <span className="absolute -bottom-1 left-0 h-0.5 w-8 bg-primary"></span>
             </h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              {barbershop?.description}
+              {serializedBarbershop?.description}
             </p>
           </div>
 
@@ -122,12 +132,15 @@ const BarbershopPage = async ({ params }: BarbershopDetailsProps) => {
               <span className="absolute -bottom-1 left-0 h-0.5 w-8 bg-primary"></span>
             </h2>
             <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
-              {barbershop.services.map((service) => (
+              {serializedBarbershop.services.map((service) => (
                 <div
                   key={service.id}
                   className="transform transition-all duration-300 hover:scale-[1.01] hover:shadow-md"
                 >
-                  <ServiceItem service={service} />
+                  <ServiceItem
+                    service={{ ...service, price: parseFloat(service.price) }}
+                    barbershop={serializedBarbershop}
+                  />
                 </div>
               ))}
             </div>
@@ -143,8 +156,9 @@ const BarbershopPage = async ({ params }: BarbershopDetailsProps) => {
               <span className="absolute -bottom-1 left-0 h-0.5 w-8 bg-primary"></span>
             </h2>
             <div className="space-y-3">
-              {barbershop.phones && barbershop.phones.length > 0 ? (
-                barbershop.phones.map((phone) => (
+              {serializedBarbershop.phones &&
+              serializedBarbershop.phones.length > 0 ? (
+                serializedBarbershop.phones.map((phone) => (
                   <PhoneItem key={phone} phone={phone} />
                 ))
               ) : (
