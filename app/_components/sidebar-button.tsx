@@ -47,7 +47,7 @@ const SidebarButton = () => {
                   <LogIn />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="w-[90%]">
+              <DialogContent className="w-[90%]" aria-describedby={undefined}>
                 <DialogHeader>
                   <DialogTitle>Login</DialogTitle>
                   <DialogDescription>
@@ -89,9 +89,8 @@ const SidebarButton = () => {
       </div>
       <div className="flex flex-col gap-2 border-b border-solid py-5">
         {quickSearchOptions.map((option) => (
-          <SheetClose asChild>
+          <SheetClose asChild key={option.title}>
             <Button
-              key={option.title}
               className="justify-start gap-2"
               variant="ghost"
               asChild
@@ -99,7 +98,6 @@ const SidebarButton = () => {
               <Link href={`/barbershops?search=serviço:${option.title}`}>
                 <Image
                   src={option.imageUrl}
-                  key={option.imageUrl}
                   width={18}
                   height={18}
                   alt={option.title}

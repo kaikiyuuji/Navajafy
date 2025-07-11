@@ -1,29 +1,28 @@
 "use client"
 
-import { Barbershop } from "@prisma/client"
+import { Barbershop, Booking } from "@prisma/client"
 import Image from "next/image"
 import { Button } from "./ui/button"
 import { Card, CardContent } from "./ui/card"
-import { CalendarIcon, Check, ChevronsUpDown } from "lucide-react"
+import { CalendarIcon, Check } from "lucide-react"
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetFooter,
-  SheetClose, // Import SheetFooter
-} from "./ui/sheet"
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "./ui/dialog"
 import { Calendar } from "./ui/calendar"
 import { ptBR } from "date-fns/locale"
-import { useState } from "react"
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
+import { useEffect, useState } from "react"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./ui/command"
 import { cn } from "../_lib/utils"
-import { isBefore, set, startOfToday } from "date-fns" // Import isBefore and startOfToday
+import { isBefore, set, startOfToday } from "date-fns"
 import { CreateBooking } from "../_actions/create-booking"
 import { useSession } from "next-auth/react"
 import { toast } from "sonner"
+import { getBookings } from "../_actions/get-booking"
 
 interface ServiceItemProps {
   service: {
@@ -61,14 +60,39 @@ const TIME_LIST = [
   "18:00",
 ]
 
+const getTimeList = (bookings: Booking[]) => {
+  return TIME_LIST.filter(time => {
+    const hour = Number(time.split(":")[0])
+    const minutes = Number(time.split(":")[1])
+
+    const hasBookingOnCurrentTime = bookings.some(
+      (booking) =>
+        booking.date.getHours() === hour &&
+        booking.date.getMinutes() === minutes,
+    )
+    if (hasBookingOnCurrentTime) {
+      return false
+    }
+    return true
+  })
+}
+
 const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
-  const {data} = useSession()
-
+  const { data } = useSession()
   const [open, setOpen] = useState(false)
-
   const [selectedDay, setSelectedDay] = useState<Date | undefined>(undefined)
-
   const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined)
+  const [dayBookings, setDayBookings] = useState<Booking[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    const fetch = async () => {
+      if (!selectedDay) return;
+      const bookings = await getBookings({ date: selectedDay, serviceId: service.id })
+      setDayBookings(bookings)
+    }
+    fetch()
+  }, [selectedDay, service.id])
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDay(date)
@@ -77,32 +101,42 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
 
   const handleTimeSelect = (time: string) => {
     setSelectedTime(time)
-    setOpen(false)
-    console.log(`Horário selecionado: ${time} no dia ${selectedDay?.toLocaleDateString()}`);
   }
 
   const handleCreateBooking = async () => {
-    try { if (!selectedDay || !selectedTime) {
-      console.error("Data ou horário não selecionados");
-      return;
+    setIsLoading(true)
+    try {
+      if (!selectedDay || !selectedTime) {
+        console.error("Data ou horário não selecionados");
+        return;
+      }
+      const hour = Number(selectedTime?.split(':')[0]);
+      const minute = Number(selectedTime?.split(':')[1]);
+      const newDate = set(selectedDay, {
+        hours: hour,
+        minutes: minute,
+      })
+      await CreateBooking({
+        serviceId: service.id,
+        userId: (data?.user as any).id,
+        date: newDate,
+      })
+      
+      // Recarrega os dados do dia para atualizar horários disponíveis
+      const bookings = await getBookings({ date: selectedDay, serviceId: service.id })
+      setDayBookings(bookings)
+      
+      toast.success("Reserva criada com sucesso!")
+      setSelectedTime(undefined)
+      setSelectedDay(undefined)
+      setOpen(false) // Limpa o horário selecionado
+      
+    } catch (error) {
+      console.log(error)
+      toast.error("Erro ao criar reserva")
+    } finally {
+      setIsLoading(false)
     }
-    const hour = Number(selectedTime?.split(':')[0]);
-    const minute = Number(selectedTime?.split(':')[1]);
-    const newDate = set(selectedDay, {
-      hours: hour,
-      minutes: minute, 
-    })
-    await CreateBooking({
-      serviceId: service.id,
-      userId: (data?.user as any).id,
-      date: newDate,
-    })
-    toast.success("Reserva criada com sucesso!")
-  }catch (error) {
-    console.log(error)
-    toast.error("Erro ao criar reserva")
-  }
-    
   };
 
   return (
@@ -136,8 +170,8 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
                 }).format(Number(service.price))}
               </p>
 
-              <Sheet>
-                <SheetTrigger asChild>
+              <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild>
                   <Button
                     size="sm"
                     variant="secondary"
@@ -149,119 +183,121 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
                       →
                     </span>
                   </Button>
-                </SheetTrigger>
-                <SheetContent>
-                  <SheetHeader>
-                    <SheetTitle>Fazer Reserva</SheetTitle>
-                  </SheetHeader>
+                </DialogTrigger>
+                <DialogContent aria-describedby={undefined} className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="text-xl font-bold">Fazer Reserva</DialogTitle>
+                  </DialogHeader>
 
-                  <div className="align-center flex flex-col items-center border-b border-solid py-5">
-                    <Calendar
-                      mode="single"
-                      locale={ptBR}
-                      className="w-full"
-                      selected={selectedDay}
-                      onSelect={handleDateSelect}
-                      disabled={(date) => isBefore(date, startOfToday())}
-                    />
-                  </div>
+                  <div className="space-y-6">
+                    {/* Calendar Section */}
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-medium text-muted-foreground">Selecione a data</h3>
+                      <div className="flex justify-center">
+                        <Calendar
+                          mode="single"
+                          locale={ptBR}
+                          className="rounded-md border"
+                          selected={selectedDay}
+                          onSelect={handleDateSelect}
+                          disabled={(date) => isBefore(date, set(startOfToday(), { hours: 23, minutes: 59, seconds: 59 }))}
+                        />
+                      </div>
+                    </div>
 
-                  <div className="align-center flex flex-col items-center border-b border-solid py-5">
+                    {/* Time Selection */}
+                    {selectedDay && (
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-medium text-muted-foreground">Selecione o horário</h3>
+                        <Command className="border rounded-md">
+                          <CommandInput placeholder="Buscar horário..." />
+                          <CommandList className="max-h-[120px]">
+                            <CommandEmpty>Nenhum horário encontrado.</CommandEmpty>
+                            <CommandGroup>
+                              {getTimeList(dayBookings).map((time) => (
+                                <CommandItem
+                                  key={time}
+                                  value={time}
+                                  onSelect={() => handleTimeSelect(time)}
+                                  className="cursor-pointer"
+                                >
+                                  {time}
+                                  <Check
+                                    className={cn(
+                                      "ml-auto h-4 w-4",
+                                      selectedTime === time ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </div>
+                    )}
 
-                    {/* Combobox for time selection */}
-                    <Popover open={open} onOpenChange={setOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                      variant="outline"
-                      className="w-[190px] justify-between"
-                      disabled={!selectedDay} // Disable if no day is selected
-                      >
-                      {/* Placeholder or selected time */}
-                      {selectedTime ? selectedTime : "Selecione um horário"}
-                      <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[190px] p-0">
-                      <Command>
-                      <CommandInput placeholder="Buscar horário..." />
-                      <CommandList>
-                        <CommandEmpty>Nenhum horário encontrado.</CommandEmpty>
-                        <CommandGroup>
-                        {TIME_LIST.map((time) => (
-                          <CommandItem
-                          key={time}
-                          value={time}
-                          onSelect={() => handleTimeSelect(time)} // Use handleTimeSelect
-                          >
-                          {time}
-                          {/* Add check icon if selected */}
-                          <Check
-                            className={cn(
-                            "ml-auto h-4 w-4",
-                            selectedTime === time ? "opacity-100" : "opacity-0" // Check if this time is selected
-                            )}
-                          />
-                          </CommandItem>
-                        ))}
-                        </CommandGroup>
-                      </CommandList>
-                      </Command>
-                    </PopoverContent>
-                    </Popover>
-                  </div>
-                    <Card className="mt-4">
-                      <CardContent className="p-3">
-                        <div className="flex items-center justify-between">
-                          <h2 className="font-bold">{service.name}</h2>
-                          <p className="text-sm font-semibold">
-                            {Intl.NumberFormat("pt-BR", {
-                              style: "currency",
-                              currency: "BRL",
-                            }).format(Number(service.price))}
-                          </p>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <h2 className="font-sm text-gray-400">Data</h2>
-                          <p className="text-sm">
-                            {selectedDay ? selectedDay.toLocaleDateString("pt-BR", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "numeric",
-                            }) : 'Data não selecionada'}
-                          </p>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <h2 className="font-sm text-gray-400">Horário</h2>
-                          <p className="text-sm">
-                            {selectedTime ? selectedTime : 'Horário não selecionado'}
-                          </p>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <h2 className="font-sm text-gray-400">Barbearia</h2>
-                          <p className="text-sm">
-                            {barbershop.name}
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
+                    {/* Booking Summary */}
+                    {selectedDay && selectedTime && (
+                      <Card className="border-2 border-primary/20 bg-primary/5">
+                        <CardContent className="p-4">
+                          <div className="space-y-3">
+                            <h3 className="text-base font-semibold text-primary">Resumo da Reserva</h3>
+                            
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">{service.name}</span>
+                                <span className="text-sm font-semibold text-primary">
+                                  {Intl.NumberFormat("pt-BR", {
+                                    style: "currency",
+                                    currency: "BRL",
+                                  }).format(Number(service.price))}
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">Data</span>
+                                <span className="text-sm font-medium">
+                                  {selectedDay.toLocaleDateString("pt-BR", {
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                    year: "numeric",
+                                  })}
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">Horário</span>
+                                <span className="text-sm font-medium">{selectedTime}</span>
+                              </div>
+                              
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">Barbearia</span>
+                                <span className="text-sm font-medium">{barbershop.name}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
 
-                  <div className="flex w-full items-center">
-                    {/* Add SheetFooter here */}
-                    <SheetFooter className="flex w-full">
-                      <SheetClose asChild>
-                        <Button
-                          className="w-full mt-4"
-                          onClick={handleCreateBooking}
-                          disabled={!selectedDay || !selectedTime}
-                        >
-                          Confirmar
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <DialogClose asChild>
+                        <Button variant="outline" className="flex-1">
+                          Cancelar
                         </Button>
-                      </SheetClose>
-                    </SheetFooter>
+                      </DialogClose>
+                      <Button
+                        onClick={handleCreateBooking}
+                        disabled={!selectedDay || !selectedTime || isLoading}
+                        className="flex-1"
+                      >
+                        {isLoading ? "Confirmando..." : "Confirmar Reserva"}
+                      </Button>
+                    </div>
                   </div>
-                </SheetContent>
-              </Sheet>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </div>
