@@ -9,16 +9,13 @@ import Image from "next/image"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  DialogTrigger
 } from "./ui/dialog"
 import { signIn, signOut, useSession } from "next-auth/react"
 import { Avatar, AvatarImage } from "./ui/avatar"
+import SingInDialog from "./sing-in-dialog"
 
 const SidebarButton = () => {
-  const handleLoginWithGoogleClick = () => signIn("google")
   const { data } = useSession()
   const handleLogoutClick = () => signOut()
 
@@ -48,26 +45,7 @@ const SidebarButton = () => {
                 </Button>
               </DialogTrigger>
               <DialogContent className="w-[90%]" aria-describedby={undefined}>
-                <DialogHeader>
-                  <DialogTitle>Login</DialogTitle>
-                  <DialogDescription>
-                    Conecte-se com sua conta do Google.
-                  </DialogDescription>
-                </DialogHeader>
-
-                <Button
-                  variant="outline"
-                  className="gap-2 text-lg font-bold"
-                  onClick={handleLoginWithGoogleClick}
-                >
-                  <Image
-                    alt="Google"
-                    src="google.svg"
-                    width={18}
-                    height={18}
-                  ></Image>
-                  Google
-                </Button>
+                <SingInDialog />  
               </DialogContent>
             </Dialog>
           </>

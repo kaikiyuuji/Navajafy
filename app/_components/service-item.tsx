@@ -23,6 +23,7 @@ import { CreateBooking } from "../_actions/create-booking"
 import { useSession } from "next-auth/react"
 import { toast } from "sonner"
 import { getBookings } from "../_actions/get-booking"
+import SingInDialog from "./sing-in-dialog"
 
 interface ServiceItemProps {
   service: {
@@ -78,8 +79,9 @@ const getTimeList = (bookings: Booking[]) => {
 }
 
 const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
-  const { data } = useSession()
+  const { data, status } = useSession()
   const [open, setOpen] = useState(false)
+  const [showLoginDialog, setShowLoginDialog] = useState(false)
   const [selectedDay, setSelectedDay] = useState<Date | undefined>(undefined)
   const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined)
   const [dayBookings, setDayBookings] = useState<Booking[]>([])
@@ -118,7 +120,6 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
       })
       await CreateBooking({
         serviceId: service.id,
-        userId: (data?.user as any).id,
         date: newDate,
       })
       
@@ -170,12 +171,24 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
                 }).format(Number(service.price))}
               </p>
 
-              <Dialog open={open} onOpenChange={setOpen}>
+              <Dialog open={open} onOpenChange={(isOpen) => {
+                if (status === 'unauthenticated') {
+                  setShowLoginDialog(true)
+                  return
+                }
+                setOpen(isOpen)
+              }}>
                 <DialogTrigger asChild>
                   <Button
                     size="sm"
                     variant="secondary"
                     className="group transition-all duration-300 hover:bg-primary hover:text-primary-foreground"
+                    onClick={(e) => {
+                      if (status === 'unauthenticated') {
+                        e.preventDefault()
+                        setShowLoginDialog(true)
+                      }
+                    }}
                   >
                     <CalendarIcon size={14} className="mr-2" />
                     <span>Reservar</span>
@@ -200,7 +213,7 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
                           className="rounded-md border"
                           selected={selectedDay}
                           onSelect={handleDateSelect}
-                          disabled={(date) => isBefore(date, set(startOfToday(), { hours: 23, minutes: 59, seconds: 59 }))}
+                          disabled={(date) => isBefore(date, startOfToday())}
                         />
                       </div>
                     </div>
@@ -298,11 +311,20 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
                   </div>
                 </DialogContent>
               </Dialog>
+
+              {/* Login Dialog */}
+              <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+                <DialogContent className="sm:max-w-[425px]" aria-describedby={undefined}>
+                  <SingInDialog />
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </div>
       </CardContent>
     </Card>
+
+    
   )
 }
 
