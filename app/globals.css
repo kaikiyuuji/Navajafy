@@ -275,3 +275,29 @@
   -webkit-text-fill-color: transparent;
   animation: text-shimmer 4s linear infinite;
 }
+
+/* Animações de bounce */
+@keyframes bounce-left-right {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-6px);
+  }
+}
+@keyframes bounce-right-left {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(6px);
+  }
+}
+.animate-bounce-left-right {
+  animation: bounce-left-right 1.2s infinite;
+}
+.animate-bounce-right-left {
+  animation: bounce-right-left 1.2s infinite;
+}

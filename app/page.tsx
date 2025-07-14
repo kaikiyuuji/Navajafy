@@ -1,22 +1,44 @@
 import Header from "./_components/header"
-import { Button } from "./_components/ui/button"
-import Image from "next/image"
+import { Button } from "./_components/ui/button"  
 import { db } from "./_lib/prisma"
 import BarbershopItem from "./_components/barbershop-item"
 import { quickSearchOptions } from "./_constants/search"
 import BookingItem from "./_components/booking-item"
 import Search from "./_components/search"
 import ServiceDropdownClient from "./_components/service-dropdown-client"
+import { getServerSession } from "next-auth"
+import { authOptions } from "./_lib/auth"
+import { Carousel, CarouselContent, CarouselItem } from "./_components/ui/carousel" // Import Carousel components
+import { format } from "date-fns"
+import { ptBR } from "date-fns/locale"
 
 const Home = async () => {
   // Call to database
+  const session = await getServerSession(authOptions)
   const barbershops = await db.barbershop.findMany({})
   const popularBarbershops = await db.barbershop.findMany({
     orderBy: {
       name: "desc",
     },
   })
-
+  const bookings = session?.user ? await db.booking.findMany({
+    where: {
+      userId: (session?.user as any).id,
+      date: {
+        gte: new Date(),
+      },
+    },
+    include: {
+      service: {
+        include: {
+          barbershop: true,
+        },
+      },
+    },
+    orderBy: {
+      date: "asc",
+    },
+  }) : []
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
       {/* Header */}
@@ -30,7 +52,7 @@ const Home = async () => {
         >
           <h2 className="mt-6 text-2xl font-bold">Olá, Kaiki!</h2>
           <p className="mb-3 text-sm text-gray-400">
-            Segunda-feira, 08 de julho
+            {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
           </p>
         </div>
 
@@ -56,12 +78,48 @@ const Home = async () => {
         </div>
 
         {/* Booking Section - With Animation */}
-        <div
-          className="animate-fade-in opacity-0"
-          style={{ animationDelay: "0.3s", animationDuration: "0.5s" }}
-        >
-          <BookingItem />
-        </div>
+        {/* Render only if there are bookings */}
+        {bookings.length > 0 && (
+          <div
+            className="animate-fade-in opacity-0"
+            style={{ animationDelay: "0.3s", animationDuration: "0.5s" }}
+          >
+            <h2 className="relative mb-3 inline-block text-sm font-bold uppercase text-gray-400">
+              Agendamentos
+              <span className="absolute -bottom-1 left-0 h-0.5 w-10 bg-primary"></span>
+            </h2>
+            
+            {/* Use Carousel for bookings */}
+            <Carousel
+              opts={{
+                align: "start",
+              }}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-4">
+                {bookings.map((booking) => (
+                  <CarouselItem key={booking.id} className="pl-4 pr-2 pt-4 basis-full">
+                    <BookingItem booking={booking} />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              {/* Add CarouselPrevious and CarouselNext if needed */}
+              {/* <CarouselPrevious /> */}
+              {/* <CarouselNext /> */}
+            </Carousel>
+            {/* Indicador moderno de arraste */}
+            <div className="flex flex-col items-center mt-1">
+              <div className="flex items-center gap-1">
+                <span className="animate-bounce-left-right text-gray-400 text-lg select-none">←</span>
+                <div className="w-8 h-1 rounded-full bg-gray-300 opacity-70 animate-pulse" />
+                <div className="w-10 h-2 rounded-full bg-gray-300 opacity-70 animate-pulse" />
+                <div className="w-8 h-1 rounded-full bg-gray-300 opacity-70 animate-pulse" />
+                <span className="animate-bounce-right-left text-gray-400 text-lg select-none">→</span>
+              </div>
+            </div>
+          </div>
+        )}
+
 
         {/* Recommended Section - With Animation */}
         <div

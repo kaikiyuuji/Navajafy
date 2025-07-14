@@ -1,33 +1,51 @@
+import { Prisma } from "@prisma/client"
 import { Avatar, AvatarImage } from "./ui/avatar"
 import { Badge } from "./ui/badge"
 import { Card, CardContent } from "./ui/card"
 import { CalendarIcon, ClockIcon, CheckCircleIcon } from "lucide-react"
+import { format, isFuture } from "date-fns"
+import { ptBR } from "date-fns/locale"
 
-const BookingItem = () => {
+interface BookingItemProps {
+  booking: Prisma.BookingGetPayload<{
+    include: {
+      service: {
+        include: {
+          barbershop: true
+        }
+      }
+    }
+  }>
+}
+
+const BookingItem = ({ booking }: BookingItemProps) => { 
+  const isConfirmed = isFuture(booking.date)
   return (
     <>
-      <h2 className="relative mb-3 inline-block text-xs font-bold uppercase text-gray-400">
-        Agendamentos
-        <span className="absolute -bottom-1 left-0 h-0.5 w-10 bg-primary"></span>
-      </h2>
-
       <Card className="card-hover overflow-hidden border-secondary/50 shadow-sm transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10">
         <CardContent className="p-0">
           <div className="flex flex-col justify-between sm:flex-row">
             {/* Booking Left */}
             <div className="flex flex-col gap-3 p-5">
-              <Badge className="shine-effect w-fit items-center justify-center bg-emerald-500/10 font-bold text-emerald-500 transition-colors hover:bg-emerald-500/20">
+              {isConfirmed ? (
+                <Badge className="shine-effect w-fit items-center justify-center bg-emerald-500/10 font-bold text-emerald-500 transition-colors hover:bg-emerald-500/20">
                 <CheckCircleIcon size={14} className="mr-1" />
                 Confirmado
               </Badge>
+              ) : (
+                <Badge className="shine-effect w-fit items-center justify-center bg-zinc-500/10 font-bold text-zinc-500 transition-colors hover:bg-zinc-500/20">
+                  <ClockIcon size={14} className="mr-1" />
+                  Finalizado
+                </Badge>
+              )}
 
-              <h3 className="text-lg font-semibold">Corte de Cabelo</h3>
+              <h3 className="text-lg font-semibold">{booking.service.name}</h3>
 
               <div className="flex items-center gap-2">
                 <Avatar className="h-8 w-8 border-2 border-primary/20">
-                  <AvatarImage src="https://utfs.io/f/0522fdaf-0357-4213-8f52-1d83c3dcb6cd-18e.png" />
+                  <AvatarImage src={booking.service.barbershop.imageUrl} />
                 </Avatar>
-                <p className="text-sm font-medium">Barbearia Nvj</p>
+                <p className="text-sm font-medium">{booking.service.barbershop.name}</p>
               </div>
             </div>
 
@@ -38,8 +56,8 @@ const BookingItem = () => {
                   <CalendarIcon size={16} className="text-primary" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Agosto</p>
-                  <p className="text-base font-bold">10</p>
+                  <p className="text-xs text-muted-foreground capitalize">{format(booking.date, "MMM", { locale: ptBR })}</p>
+                  <p className="text-base font-bold">{format(booking.date, "dd", { locale: ptBR })}</p>
                 </div>
               </div>
 
@@ -49,7 +67,7 @@ const BookingItem = () => {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Horário</p>
-                  <p className="text-base font-bold">20:00</p>
+                  <p className="text-base font-bold">{format(booking.date, "HH:mm", { locale: ptBR })}</p>
                 </div>
               </div>
             </div>
