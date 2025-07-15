@@ -8,14 +8,16 @@ import Link from "next/link"
 
 const Header = () => {
   return (
-    <Card className="sticky top-0 z-50 rounded-none border-x-0 border-t-0 bg-card/80 shadow-md backdrop-blur-lg">
+    <Card className="sticky top-0 z-50 rounded-none border-x-0 border-t-0 bg-card/50 shadow-md backdrop-blur-sm">
       <CardContent className="flex flex-row items-center justify-between p-4 lg:container sm:px-6 md:px-8 lg:mx-auto lg:max-w-6xl">
-         
-        <div className="flex flex-row items-center gap-3">     
+        <div className="flex flex-row items-center gap-3">
           <div className="gradient-animate relative flex h-10 w-10 items-center justify-center rounded-full">
             <Image src="/logo.svg" alt="Navajafy" width={40} height={40} />
           </div>
-          <Link href="/" className="text-lg font-extrabold tracking-tight md:text-xl">
+          <Link
+            href="/"
+            className="text-lg font-extrabold tracking-tight md:text-xl"
+          >
             NavajaFy
           </Link>
         </div>

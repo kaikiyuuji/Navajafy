@@ -5,14 +5,19 @@ import { authOptions } from "../_lib/auth"
 import BookingItem from "../_components/booking-item"
 import { redirect } from "next/navigation"
 
+interface UserSession {
+  id: string
+}
+
 const Bookings = async () => {
   const session = await getServerSession(authOptions)
+  const user = session?.user as UserSession
   if (!session?.user) {
     return redirect("/login")
   }
   const confirmedBookings = await db.booking.findMany({
     where: {
-      userId: (session?.user as any).id,
+      userId: user.id,
       date: {
         gte: new Date(),
       },
@@ -30,7 +35,7 @@ const Bookings = async () => {
   })
   const concludedBookings = await db.booking.findMany({
     where: {
-      userId: (session?.user as any).id,
+      userId: user.id,
       date: {
         lt: new Date(),
       },
@@ -47,7 +52,7 @@ const Bookings = async () => {
     },
   })
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <Header />
       <div className="px-5 lg:container sm:px-6 md:px-8 lg:mx-auto lg:max-w-6xl">
         <div
@@ -85,7 +90,7 @@ const Bookings = async () => {
               <span className="absolute -bottom-1 left-0 h-0.5 w-10 bg-primary"></span>
             </h2>
           </div>
-          <div className="space-y-4">
+          <div className="mb-4 space-y-4">
             {concludedBookings.length === 0 ? (
               <div className="flex items-center justify-center py-12">
                 <span className="text-center text-muted-foreground">
@@ -100,9 +105,8 @@ const Bookings = async () => {
           </div>
         </div>
       </div>
-    </>
+    </div>
   )
 }
 
 export default Bookings
-

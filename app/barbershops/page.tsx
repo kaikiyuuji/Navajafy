@@ -11,11 +11,11 @@ interface BarbershopsPageProps {
 }
 
 const BarbershopsPage = async ({ searchParams }: BarbershopsPageProps) => {
-  const search = searchParams.search || "";
-  let barbershops;
+  const search = searchParams.search || ""
+  let barbershops
 
   if (search.toLowerCase().startsWith("serviço:")) {
-    const serviceName = search.slice(8).trim();
+    const serviceName = search.slice(8).trim()
     barbershops = await db.barbershop.findMany({
       where: {
         services: {
@@ -30,7 +30,7 @@ const BarbershopsPage = async ({ searchParams }: BarbershopsPageProps) => {
       include: {
         services: true,
       },
-    });
+    })
   } else {
     barbershops = await db.barbershop.findMany({
       where: {
@@ -68,17 +68,17 @@ const BarbershopsPage = async ({ searchParams }: BarbershopsPageProps) => {
       include: {
         services: true,
       },
-    });
+    })
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-background to-background/95">
+    <div className="flex min-h-screen flex-col">
       <Header />
 
       <div className="flex-1 px-5 lg:container sm:px-6 md:px-8 lg:mx-auto lg:max-w-6xl">
         <div className="my-4">
-          <Search/> 
-        </div> 
+          <Search />
+        </div>
         <div
           className="animate-fade-in mb-6 mt-6 flex items-center gap-2 opacity-0"
           style={{ animationDelay: "0.1s", animationDuration: "0.5s" }}
