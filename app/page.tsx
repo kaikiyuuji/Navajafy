@@ -1,5 +1,5 @@
 import Header from "./_components/header"
-import { Button } from "./_components/ui/button"  
+import { Button } from "./_components/ui/button"
 import { db } from "./_lib/prisma"
 import BarbershopItem from "./_components/barbershop-item"
 import { quickSearchOptions } from "./_constants/search"
@@ -8,38 +8,49 @@ import Search from "./_components/search"
 import ServiceDropdownClient from "./_components/service-dropdown-client"
 import { getServerSession } from "next-auth"
 import { authOptions } from "./_lib/auth"
-import { Carousel, CarouselContent, CarouselItem } from "./_components/ui/carousel" // Import Carousel components
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "./_components/ui/carousel" // Import Carousel components
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import Link from "next/link"
 
+interface UserSession {
+  id: string
+}
+
 const Home = async () => {
   // Call to database
   const session = await getServerSession(authOptions)
+  const user = session?.user as UserSession
   const barbershops = await db.barbershop.findMany({})
   const popularBarbershops = await db.barbershop.findMany({
     orderBy: {
       name: "desc",
     },
   })
-  const bookings = session?.user ? await db.booking.findMany({
-    where: {
-      userId: (session?.user as any).id,
-      date: {
-        gte: new Date(),
-      },
-    },
-    include: {
-      service: {
-        include: {
-          barbershop: true,
+  const bookings = session?.user
+    ? await db.booking.findMany({
+        where: {
+          userId: user.id,
+          date: {
+            gte: new Date(),
+          },
         },
-      },
-    },
-    orderBy: {
-      date: "asc",
-    },
-  }) : []
+        include: {
+          service: {
+            include: {
+              barbershop: true,
+            },
+          },
+        },
+        orderBy: {
+          date: "asc",
+        },
+      })
+    : []
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -48,30 +59,37 @@ const Home = async () => {
       <div className="px-5 lg:container sm:px-6 md:px-8 lg:mx-auto lg:max-w-6xl">
         {/* User Greeting - With Animation */}
         {session?.user ? (
-        <div
-          className="animate-fade-in opacity-0"
-          style={{ animationDelay: "0.1s", animationDuration: "0.5s" }}
-        >
-          <h2 className="mt-6 text-2xl font-bold">Olá, {session?.user?.name}!</h2>
-          <p className="mb-3 text-sm text-gray-400">
-            {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
-          </p>
-        </div>) : (
-        <div
-          className="animate-fade-in opacity-0"
-          style={{ animationDelay: "0.1s", animationDuration: "0.5s" }}
-        >
-        <div className="flex items-center mt-6">
-        <h2 className="text-2xl font-bold ">Olá, Faça seu {" "}
-          <Link href="/login" className="text-primary underline underline-offset-2 transition-colors hover:text-primary/80">
-            Login!
-          </Link>
-        </h2>
-        </div>
-          <p className="mb-3 text-sm text-gray-400">
-            {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
-          </p>
-        </div>
+          <div
+            className="animate-fade-in opacity-0"
+            style={{ animationDelay: "0.1s", animationDuration: "0.5s" }}
+          >
+            <h2 className="mt-6 text-2xl font-bold">
+              Olá, {session?.user?.name}!
+            </h2>
+            <p className="mb-3 text-sm text-gray-400">
+              {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+            </p>
+          </div>
+        ) : (
+          <div
+            className="animate-fade-in opacity-0"
+            style={{ animationDelay: "0.1s", animationDuration: "0.5s" }}
+          >
+            <div className="mt-6 flex items-center">
+              <h2 className="text-2xl font-bold">
+                Olá, Faça seu{" "}
+                <Link
+                  href="/login"
+                  className="text-primary underline underline-offset-2 transition-colors hover:text-primary/80"
+                >
+                  Login!
+                </Link>
+              </h2>
+            </div>
+            <p className="mb-3 text-sm text-gray-400">
+              {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+            </p>
+          </div>
         )}
 
         {/* Search and Filter Section */}
@@ -106,7 +124,7 @@ const Home = async () => {
               Agendamentos
               <span className="absolute -bottom-1 left-0 h-0.5 w-10 bg-primary"></span>
             </h2>
-            
+
             {/* Use Carousel for bookings */}
             <Carousel
               opts={{
@@ -116,7 +134,10 @@ const Home = async () => {
             >
               <CarouselContent className="-ml-4">
                 {bookings.map((booking) => (
-                  <CarouselItem key={booking.id} className="pl-4 pr-2 pt-4 basis-full">
+                  <CarouselItem
+                    key={booking.id}
+                    className="basis-full pl-4 pr-2 pt-4"
+                  >
                     <BookingItem booking={booking} />
                   </CarouselItem>
                 ))}
@@ -126,18 +147,21 @@ const Home = async () => {
               {/* <CarouselNext /> */}
             </Carousel>
             {/* Indicador moderno de arraste */}
-            <div className="flex flex-col items-center mt-1">
+            <div className="mt-1 flex flex-col items-center">
               <div className="flex items-center gap-1">
-                <span className="animate-bounce-left-right text-gray-400 text-lg select-none">←</span>
-                <div className="w-8 h-1 rounded-full bg-gray-300 opacity-70 animate-pulse" />
-                <div className="w-10 h-2 rounded-full bg-gray-300 opacity-70 animate-pulse" />
-                <div className="w-8 h-1 rounded-full bg-gray-300 opacity-70 animate-pulse" />
-                <span className="animate-bounce-right-left text-gray-400 text-lg select-none">→</span>
+                <span className="animate-bounce-left-right select-none text-lg text-gray-400">
+                  ←
+                </span>
+                <div className="h-1 w-8 animate-pulse rounded-full bg-gray-300 opacity-70" />
+                <div className="h-2 w-10 animate-pulse rounded-full bg-gray-300 opacity-70" />
+                <div className="h-1 w-8 animate-pulse rounded-full bg-gray-300 opacity-70" />
+                <span className="animate-bounce-right-left select-none text-lg text-gray-400">
+                  →
+                </span>
               </div>
             </div>
           </div>
         )}
-
 
         {/* Recommended Section - With Animation */}
         <div

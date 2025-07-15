@@ -18,7 +18,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false)
   const { data } = useSession()
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get("callbackUrl") || "/"
+  const callbackUrl = searchParams?.get("callbackUrl") || "/"
   const handleGoogleLogin = async () => {
     setIsLoading(true)
     // Inicia o login com Google e redireciona após autenticação
@@ -102,11 +102,11 @@ const Login = () => {
 
           {/* Formas geométricas flutuantes */}
           <div className="absolute inset-0">
-            <div className="animate-float-slow absolute left-20 top-20 h-32 w-32 rounded-full bg-primary/5" />
-            <div className="bg-chart-1/8 animate-float-medium absolute right-32 top-40 h-24 w-24 rotate-45 rounded-lg" />
-            <div className="bg-chart-2/6 animate-float-fast absolute bottom-40 left-40 h-40 w-40 rounded-full" />
-            <div className="bg-chart-3/10 animate-float-slow absolute left-1/2 top-60 h-20 w-20 rounded-lg" />
-            <div className="bg-primary/4 animate-float-medium absolute bottom-60 right-20 h-36 w-36 rounded-full" />
+            <div className="absolute left-20 top-20 h-32 w-32 animate-float-slow rounded-full bg-primary/5" />
+            <div className="bg-chart-1/8 absolute right-32 top-40 h-24 w-24 rotate-45 animate-float-medium rounded-lg" />
+            <div className="bg-chart-2/6 absolute bottom-40 left-40 h-40 w-40 animate-float-fast rounded-full" />
+            <div className="bg-chart-3/10 absolute left-1/2 top-60 h-20 w-20 animate-float-slow rounded-lg" />
+            <div className="bg-primary/4 absolute bottom-60 right-20 h-36 w-36 animate-float-medium rounded-full" />
           </div>
 
           {/* Linhas conectoras animadas */}

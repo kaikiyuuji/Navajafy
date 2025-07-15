@@ -16,6 +16,7 @@ interface QuickSearchOption {
 
 interface ServiceDropdownProps {
   quickSearchOptions: QuickSearchOption[]
+  // eslint-disable-next-line no-unused-vars
   onSelect: (option: QuickSearchOption) => void
 }
 
@@ -40,24 +41,26 @@ const ServiceDropdown = ({
       align="end"
       className="w-[220px] rounded-xl border-secondary/70 bg-secondary/90 backdrop-blur-md"
     >
-      {quickSearchOptions.map((option) => (
-        <DropdownMenuItem
-          key={option.title}
-          className="cursor-pointer gap-2 focus:bg-secondary/50 focus:text-foreground"
-          onClick={() => onSelect(option)}
-        >
-          <div className="flex h-5 w-5 items-center justify-center">
-            <Image
-              src={option.imageUrl}
-              width={16}
-              height={16}
-              alt={option.title}
-              className="transition-transform duration-300"
-            />
-          </div>
-          {option.title}
-        </DropdownMenuItem>
-      ))}
+      {quickSearchOptions.map((option) => {
+        return (
+          <DropdownMenuItem
+            key={option.title}
+            className="cursor-pointer gap-2 focus:bg-secondary/50 focus:text-foreground"
+            onClick={() => onSelect(option)}
+          >
+            <div className="flex h-5 w-5 items-center justify-center">
+              <Image
+                src={option.imageUrl}
+                width={16}
+                height={16}
+                alt={option.title}
+                className="transition-transform duration-300"
+              />
+            </div>
+            {option.title}
+          </DropdownMenuItem>
+        )
+      })}
     </DropdownMenuContent>
   </DropdownMenu>
 )
