@@ -10,23 +10,20 @@ import {
   CardTitle,
 } from "../_components/ui/card"
 import { signIn, useSession } from "next-auth/react"
-import { redirect, useSearchParams } from "next/navigation"
+import { redirect } from "next/navigation"
 import { Shield, Sparkles, Users } from "lucide-react"
 import Image from "next/image"
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false)
   const { data } = useSession()
-  const searchParams = useSearchParams()
-  const callbackUrl = searchParams?.get("callbackUrl") || "/"
   const handleGoogleLogin = async () => {
     setIsLoading(true)
-    // Inicia o login com Google e redireciona após autenticação
-    await signIn("google", { callbackUrl })
+    await signIn("google")
   }
 
   if (data?.user) {
-    return redirect(callbackUrl)
+    return redirect("/")
   }
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-4">
