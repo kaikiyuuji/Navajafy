@@ -6,14 +6,8 @@ import { SheetClose, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet"
 import { quickSearchOptions } from "../_constants/search"
 import Link from "next/link"
 import Image from "next/image"
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger
-} from "./ui/dialog"
 import { signOut, useSession } from "next-auth/react"
 import { Avatar, AvatarImage } from "./ui/avatar"
-import SingInDialog from "./sing-in-dialog"
 
 const SidebarButton = () => {
   const { data } = useSession()
@@ -38,16 +32,11 @@ const SidebarButton = () => {
         ) : (
           <>
             <h2 className="font-bold">Olá. Faça seu login!</h2>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button size={"icon"}>
-                  <LogIn />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="w-[90%]" aria-describedby={undefined}>
-                <SingInDialog />  
-              </DialogContent>
-            </Dialog>
+            <Button size={"icon"} asChild>
+              <Link href="/login">
+                <LogIn />
+              </Link>
+            </Button>
           </>
         )}
       </div>

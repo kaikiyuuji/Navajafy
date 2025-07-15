@@ -11,6 +11,7 @@ import { authOptions } from "./_lib/auth"
 import { Carousel, CarouselContent, CarouselItem } from "./_components/ui/carousel" // Import Carousel components
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
+import Link from "next/link"
 
 const Home = async () => {
   // Call to database
@@ -40,21 +41,38 @@ const Home = async () => {
     },
   }) : []
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
+    <div className="min-h-screen">
       {/* Header */}
       <Header />
 
       <div className="px-5 lg:container sm:px-6 md:px-8 lg:mx-auto lg:max-w-6xl">
         {/* User Greeting - With Animation */}
+        {session?.user ? (
         <div
           className="animate-fade-in opacity-0"
           style={{ animationDelay: "0.1s", animationDuration: "0.5s" }}
         >
-          <h2 className="mt-6 text-2xl font-bold">Olá, Kaiki!</h2>
+          <h2 className="mt-6 text-2xl font-bold">Olá, {session?.user?.name}!</h2>
+          <p className="mb-3 text-sm text-gray-400">
+            {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+          </p>
+        </div>) : (
+        <div
+          className="animate-fade-in opacity-0"
+          style={{ animationDelay: "0.1s", animationDuration: "0.5s" }}
+        >
+        <div className="flex items-center mt-6">
+        <h2 className="text-2xl font-bold ">Olá, Faça seu {" "}
+          <Link href="/login" className="text-primary underline underline-offset-2 transition-colors hover:text-primary/80">
+            Login!
+          </Link>
+        </h2>
+        </div>
           <p className="mb-3 text-sm text-gray-400">
             {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
           </p>
         </div>
+        )}
 
         {/* Search and Filter Section */}
         <div className="mb-6">
